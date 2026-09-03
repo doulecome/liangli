@@ -366,6 +366,51 @@
   .badge.on .b-name{color:var(--ink);}
   .badge.on{animation:badgeIn .4s cubic-bezier(.3,1.5,.5,1) both;}
   @keyframes badgeIn{from{transform:scale(.7);}to{transform:none;}}
+/* ---- 契约卡 / 宽恕令牌（监督+辅助养成原型） ---- */
+.contract-card{padding:13px 14px;margin-bottom:12px;}
+.contract-h{display:flex;align-items:center;gap:6px;font-weight:700;font-size:14px;color:var(--ink2);margin-bottom:6px;}
+.contract-h .cic{font-size:17px;}
+.contract-txt{font-size:14px;font-weight:600;color:var(--ink2);margin:2px 0 9px;line-height:1.5;}
+.contract-txt.done{color:var(--ink-soft);font-weight:500;}
+.contract-sub{font-size:12.5px;color:var(--ink-soft);margin-bottom:9px;line-height:1.6;}
+.contract-card input{width:100%;box-sizing:border-box;padding:9px 10px;border:1px solid #e3e6e1;border-radius:10px;margin-bottom:9px;font-size:13px;background:#fff;}
+.contract-card input:focus{outline:none;border-color:#9cc4ad;}
+.forgive-strip{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:14px;padding:10px 13px;margin-bottom:12px;flex-wrap:wrap;}
+.forgive-strip .fi{font-weight:700;font-size:13px;color:var(--ink2);}
+.forgive-strip .fcount{font-weight:800;color:#3a7d5d;font-size:15px;}
+.forgive-strip .fhint{font-size:11.5px;color:var(--ink-soft);margin-left:auto;}
+.forgive-strip button:disabled{opacity:.45;cursor:default;}
+.pi-tag{display:inline-block;font-size:11px;font-weight:700;padding:1px 7px;border-radius:8px;margin-right:2px;vertical-align:middle;}
+.pi-tag.contract{background:#eaf4ee;color:#3a7d5d;border:1px solid #cfe6d8;}
+
+  /* 内心花园 */
+  .garden{background:linear-gradient(180deg,#f4faf5,#eef6f0);border:1px solid #d8e8dd;border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;}
+  .garden-h{display:flex;align-items:baseline;justify-content:space-between;font-weight:800;font-size:14px;color:#2f6b4f;margin-bottom:10px;}
+  .gh-sub{font-size:12px;font-weight:600;color:#7fae93;}
+  .garden-plot{display:flex;flex-wrap:wrap;gap:12px;min-height:56px;align-items:flex-end;background:#e7f3ea;border-radius:10px;padding:14px;box-shadow:inset 0 1px 3px rgba(0,0,0,.04);}
+  .garden-empty{font-size:13px;color:#8aa997;line-height:1.7;width:100%;text-align:center;}
+  .garden-plant{width:58px;text-align:center;animation:plant-pop .4s ease;}
+  .garden-plant>div:first-child{font-size:32px;line-height:1;}
+  .gp-cap{font-size:10px;color:#6f9a82;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  @keyframes plant-pop{from{transform:scale(.6);opacity:0;}to{transform:scale(1);opacity:1;}}
+  .garden-strength{margin-top:12px;}
+  .gs-row{display:flex;align-items:center;gap:8px;font-size:12px;color:#4a6b58;}
+  .gs-bar{flex:1;height:9px;background:#dceadf;border-radius:6px;overflow:hidden;}
+  .gs-fill{display:block;height:100%;background:linear-gradient(90deg,#8fd3a8,#56b483);border-radius:6px;transition:width .6s ease;}
+  .gs-tip{font-size:11px;color:#7f9c8b;margin-top:5px;line-height:1.5;}
+
+  /* 圣物商店 */
+  .shop{background:#fbf7f0;border:1px solid #ecd9bd;border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;}
+  .shop-h{display:flex;align-items:center;justify-content:space-between;font-weight:800;font-size:14px;color:#9a6a2f;margin-bottom:4px;}
+  .shop-bal{font-size:12px;color:#b5854a;font-weight:700;background:#fff5e6;padding:3px 10px;border-radius:20px;}
+  .shop-sub{font-size:11px;color:#a98b63;margin-bottom:10px;line-height:1.5;}
+  .shop-item{display:flex;align-items:center;gap:10px;padding:10px;background:#fff;border:1px solid #f0e2cd;border-radius:10px;margin-bottom:8px;}
+  .shop-ic{font-size:26px;width:34px;text-align:center;flex:none;}
+  .shop-mid{flex:1;min-width:0;}
+  .shop-name{font-size:13px;font-weight:700;color:#5a4326;}
+  .shop-desc{font-size:11px;color:#a98b63;margin-top:2px;line-height:1.45;}
+  .shop-buy{border:none;background:#caa15e;color:#fff;font-weight:700;font-size:12px;padding:8px 12px;border-radius:20px;cursor:pointer;white-space:nowrap;flex:none;}
+  .shop-buy:disabled{background:#d9cdb6;cursor:default;}
 </style>
 </head>
 <body>
@@ -405,6 +450,9 @@
     </div>
   </div>
 
+  <div class="card contract-card" id="contractCard"></div>
+  <div class="forgive-strip" id="forgiveStrip"></div>
+
   <div class="card add-card">
     <input id="taskInput" placeholder="今天想做点什么？" />
     <div class="lvl-row">
@@ -440,6 +488,12 @@
       <span style="color:#c08a6a;">放久了的念头会慢慢冷却——如果一直没做，说明它也许没那么重要。</span>
     </p>
     <div class="pool-hint hidden" id="poolHint"></div>
+    <div class="garden" id="gardenBox"></div>
+    <div class="shop" id="shopBox">
+      <div class="shop-h"><span>🛒 圣物商店</span><span class="shop-bal" id="shopBal">🌱 0</span></div>
+      <div class="shop-sub">用「成长点」兑换辅助你养成的圣物。成长点来自：做到契约 / 完成计划 / 攒下番茄。</div>
+      <div id="shopItems"></div>
+    </div>
     <div class="pool-add">
       <input id="poolInput" placeholder="记下这个瞬间的念头…" />
       <button class="btn" id="poolBtn">存入</button>
@@ -499,6 +553,15 @@
       <div class="stat"><div class="num" id="sPoolLeft">0</div><div class="lab">冷却中念头</div></div>
       <div class="stat"><div class="num" id="sCut">0</div><div class="lab">主动减负 · 件</div></div>
     </div>
+    <div class="stat-grid3" style="margin-top:10px;">
+      <div class="stat"><div class="num" id="sContract">0</div><div class="lab">契约达成 · 件</div></div>
+      <div class="stat"><div class="num" id="sGarden">0</div><div class="lab">花园株数</div></div>
+    </div>
+    <div class="stat-grid3" style="margin-top:10px;">
+      <div class="stat"><div class="num" id="sStudyStreak">0</div><div class="lab">学习连续(天)</div></div>
+      <div class="stat"><div class="num" id="sStudyWeek">0</div><div class="lab">本周学习(分)</div></div>
+      <div class="stat"><div class="num" id="sStudyTop">—</div><div class="lab">最常学科目</div></div>
+    </div>
     <div style="margin-top:14px;font-size:13px;font-weight:700;">近 7 日完成精力</div>
     <div class="week" id="weekChart"></div>
     <div class="milestone" id="milestone"></div>
@@ -537,6 +600,20 @@
       <button class="btn ghost" id="importBtn">导入备份</button>
     </div>
     <input type="file" id="importFile" accept="application/json,.json" style="display:none" />
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>导入学习记录（学苗）</h2>
+    <p class="backup-note">从「学苗 StudySprout」导出的学习事件会<b>合并</b>进来（不覆盖现有数据）：折算成成长点🌱，并在看板生成学习连续 / 本周时长。配对的学苗在 <code>study/index.html</code>。</p>
+    <div class="backup-row">
+      <button class="btn" id="importStudyBtn">导入学习记录</button>
+      <button class="btn ghost" id="importStudyPaste">粘贴 JSON</button>
+    </div>
+    <div id="studyPasteBox" style="display:none;margin-top:10px;">
+      <textarea id="studyPaste" rows="4" placeholder='粘贴学苗导出的 JSON 数组，如 [{"id":"...","ts":...,"subject":"英语","type":"minutes","amount":20,"note":"","source":"studyapp"}]' style="width:100%;border:1px solid var(--ring);border-radius:12px;padding:10px;font-size:12px;font-family:ui-monospace,monospace;resize:vertical;"></textarea>
+      <button class="btn" id="studyPasteGo" style="margin-top:8px;width:100%;">确认合并</button>
+    </div>
+    <input type="file" id="importStudyFile" accept="application/json,.json" style="display:none" />
   </div>
 
   <div class="card">
@@ -605,6 +682,7 @@
     try{localStorage.setItem(KEY,JSON.stringify(state));}catch(e){}
   }
   function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(m){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];});}
 
   var def=load();
   var state=def||{
@@ -625,6 +703,23 @@
   if(!Array.isArray(state.cutLog))state.cutLog=[];
   if(!Array.isArray(state.stash))state.stash=[];
   if(!Array.isArray(state.calib))state.calib=[];   // {lvl,actual,when} actual: less/same/more
+  if(typeof state.forgive!=="number")state.forgive=3;        // 宽恕令牌存量
+  if(typeof state.contract!=="object")state.contract=null;   // 今日契约 {text,date,done}
+  if(typeof state.protectDay!=="string")state.protectDay=""; // 被令牌护住的日界
+  if(typeof state.lastForgiveGrant!=="string")state.lastForgiveGrant="";
+  if(typeof state.lastCoachDate!=="string")state.lastCoachDate="";
+  if(!state.stats)state.stats={};
+  if(typeof state.stats.contractDone!=="number")state.stats.contractDone=0;
+  if(typeof state.growth!=="number")state.growth=0;        // 成长点余额（商店货币）
+  if(!state.study||typeof state.study!=="object")state.study={events:[]}; // 学苗导入的学习事件
+  if(!Array.isArray(state.study.events))state.study.events=[];
+  if(typeof state.contractBonus!=="number")state.contractBonus=0; // 契约石加成（下次契约额外成长点）
+  // 每日自动补一张宽恕令牌（上限 5，零摩擦）
+  if(state.lastForgiveGrant!==today()){
+    state.lastForgiveGrant=today();
+    state.forgive=Math.min(5,(state.forgive||0)+1);
+    save();
+  }
   // 暂存区 7 天过期清理
   if(state.stash.length){
     var _exp=Date.now()-7*86400000;
@@ -736,7 +831,7 @@
     var d=new Date(),run=0;
     for(var i=0;i<365;i++){
       var key=dayKey(d);
-      var done=state.history[key]&&state.history[key].done>0;
+      var done=(state.history[key]&&state.history[key].done>0)||state.protectDay===key;
       if(i===0){ if(done)run=1; d.setDate(d.getDate()-1); continue; }
       if(done){ run=run+1; }
       else {
@@ -771,6 +866,26 @@
     return "量力而行，你做得已经很好了 🌿";
   }
 
+  // ---------- 猫即教练（启发式短对话，预留真 AI 接口） ----------
+  function coachTipLocal(){
+    var load=loadPoints(),cap=effCap(),st=streakCount();
+    var coolN=state.pool.filter(function(p){return !p.contract && daysSince(p.when)>=state.coolDays;}).length;
+    var ct=state.contract&&state.contract.date===today();
+    if(load>cap) return "今天装得有点满，挑一件交给水豚叼走？少做一点不是偷懒 ✂️";
+    if(ct&&!state.contract.done) return "今天认领的那件还在等你——只做认领的，分量就够 🤝";
+    if(st>=3) return "已连续量力 "+st+" 天，这份稳劲比多做几件更值 🌿 今天想认领件什么小事？";
+    if(coolN>=3) return "池子里有几株念头放冷静了，有没有哪株今天想点起来？🔥";
+    if((state.forgive||0)<=0) return "护盾用光也别慌，漏一天只是连击减半，不是清零 🛡️";
+    return "量力不是少做，是把力气花在认领的事上。今天想认领哪件？🤝";
+  }
+  // 真 AI 版：把 catCoachAsk 内部换成 fetchCoachTip()（接 WorkBuddy / LLM），返回同样格式的一句话即可。
+  function catCoachAsk(force){
+    var td=today();
+    if(!force && state.lastCoachDate===td) return;   // 每天只主动问一次，不刷屏
+    state.lastCoachDate=td;save();
+    catSay(coachTipLocal(),3200);
+  }
+
   // 猫动画完全交给 <video loop>（demo 原版 webm，浏览器原生循环，持续轻柔动）
   // 气泡与表情（原宠物模块承担，冒险内容移除后精简实现）
   var catKey=null,catTasks=null,reacting=false,reactT=null;
@@ -793,6 +908,142 @@
     empty:"今天还空着呢，别急着填满 😌",
     noguilt:"砍掉负担，不内疚 ✂️"
   };
+  // ---------- 契约卡（监督：认领一件真实小事） ----------
+  function renderContract(){
+    var box=document.getElementById("contractCard");if(!box)return;
+    var c=state.contract, td=today();
+    if(c&&c.date===td&&c.done){
+      box.innerHTML='<div class="contract-h"><span class="cic">🤝</span><span>今日契约</span></div>'
+        +'<div class="contract-txt done">'+esc(c.text)+' ✅</div>'
+        +'<div class="contract-sub">今天这件是你认领的，做到就很有分量 🌿</div>';
+    }else if(c&&c.date===td){
+      box.innerHTML='<div class="contract-h"><span class="cic">🤝</span><span>今日契约</span></div>'
+        +'<div class="contract-txt">'+esc(c.text)+'</div>'
+        +'<button class="btn" id="contractDone">✓ 这件我认领并做到了</button>';
+      var bd=document.getElementById("contractDone");
+      if(bd)bd.onclick=completeContract;
+    }else{
+      box.innerHTML='<div class="contract-h"><span class="cic">🤝</span><span>今日契约</span></div>'
+        +'<div class="contract-sub">认领今天一件真实的小事，做完它，连猫都替你高兴。不勉强，只认领你真心想做的。</div>'
+        +'<input id="contractInput" placeholder="例如：喝满 3 杯水 / 散步 10 分钟 / 早睡" />'
+        +'<button class="btn-pri" id="contractSet">认领这一件</button>';
+      var inp=document.getElementById("contractInput");
+      var setFn=function(){
+        var v=inp.value.trim();if(!v){toast("先写一件今天真想做的小事 🌿");return;}
+        state.contract={text:v,date:td,done:false};save();
+        catSay("好，今天这件算你认领的，量力去做 🤝",2200);
+        renderContract();
+      };
+      document.getElementById("contractSet").onclick=setFn;
+      inp.addEventListener("keydown",function(e){if(e.key==="Enter")setFn();});
+    }
+  }
+  function completeContract(){
+    var c=state.contract;if(!c||c.date!==today()||c.done)return;
+    c.done=true;
+    var d=today();state.history[d]=state.history[d]||{done:0};state.history[d].done+=1; // 契约达成 +1 成长点
+    // 契约达成 → 沉淀一条成长记忆到成长池（监督→辅助→养成闭环）
+    state.pool.unshift({id:uid(),title:"今日契约做到了：「"+c.text+"」🤝",when:Date.now(),contract:true});
+    state.stats.contractDone=(state.stats.contractDone||0)+1;
+    var _gb=state.contractBonus||0;state.contractBonus=0;state.growth=(state.growth||0)+1+_gb; // 契约达成 +1 成长点（含契约石加成）
+    grantForgive(1); // 做到契约攒一张护盾令牌，正反馈
+    save();
+    burstAt(document.getElementById("contractCard"),["🤝","✨","💚"],12,true);
+    catSay("这件是你认领的，做到就很有分量 🌿 还攒下一张护盾令牌 🛡️",2600);
+    renderContract();renderStats();renderLoad();renderPool();renderShop();
+  }
+  // ---------- 宽恕令牌（辅助：漏做一天也不掉连击） ----------
+  function renderForgive(){
+    var box=document.getElementById("forgiveStrip");if(!box)return;
+    var n=state.forgive||0, used=(state.protectDay===today());
+    box.innerHTML='<span class="fi">🛡️ 宽恕令牌</span>'
+      +'<span class="fcount">×'+n+'</span>'
+      +'<button class="btn ghost" id="forgiveBtn"'+(used||n<=0?" disabled":"")+'>'+(used?"今天已护住":"护住今天")+'</button>'
+      +'<span class="fhint">'+(used?"今天就算漏做也不掉连击 🛡️":"偶尔漏一天，用一张护住")+'</span>';
+    var b=document.getElementById("forgiveBtn");
+    if(b&&!used&&n>0)b.onclick=useForgive;
+  }
+  function useForgive(){
+    if((state.forgive||0)<=0){toast("没有令牌了，明天会补一张 🛡️");return;}
+    if(state.protectDay===today()){toast("今天已经被护住了 🛡️");return;}
+    state.forgive=(state.forgive||0)-1;state.protectDay=today();save();
+    burstAt(document.getElementById("forgiveStrip"),["🛡️","✨"],10,true);
+    catSay("用了一张令牌护住今天，漏做也不掉连击 🛡️",2400);
+    renderForgive();renderStats();
+  }
+  // 统一发放宽恕令牌（契约达成 / 未来商店兑换共用此口，上限 5）
+  function grantForgive(n){
+    n=Math.max(0,(n|0));if(!n)return;
+    state.forgive=Math.min(5,(state.forgive||0)+n);
+    save();renderForgive();renderStats();
+  }
+
+  // ---------- 成长点经济 + 圣物商店 ----------
+  // 成长点是商店货币；契约达成 / 完成计划 / 攒番茄都能获得
+  function awardGrowth(n){ if(!n)return; state.growth=(state.growth||0)+n; save(); if(document.getElementById("shopBox"))renderShop(); }
+  var SHOP=[
+    {id:"forgive",ic:"🛡️",name:"宽恕令牌 ×1",desc:"漏做一天也不掉连击，护住你认领的日子。",cost:2,
+     buy:function(){ grantForgive(1); }},
+    {id:"stone",ic:"🌟",name:"契约石",desc:"下次契约达成额外 +2 成长点（只生效一次）。",cost:3,
+     buy:function(){ state.contractBonus=(state.contractBonus||0)+2; toast("契约石生效：下次契约多 +2 成长点 🌟"); }},
+    {id:"dew",ic:"💧",name:"灌溉露珠",desc:"花园里的幼苗快进一阶，让成长看得见。",cost:1,
+     buy:function(){ state.pool.forEach(function(p){ if(!p.contract) p.when-=2*86400000; }); if(document.getElementById("gardenBox"))renderGarden(); }}
+  ];
+  function renderShop(){
+    var bal=document.getElementById("shopBal"); if(bal)bal.textContent="🌱 "+(state.growth||0);
+    var box=document.getElementById("shopItems"); if(!box)return;
+    var own=state.growth||0;
+    box.innerHTML=SHOP.map(function(s){
+      var can=own>=s.cost;
+      return '<div class="shop-item"><div class="shop-ic">'+s.ic+'</div>'
+        +'<div class="shop-mid"><div class="shop-name">'+esc(s.name)+'</div>'
+        +'<div class="shop-desc">'+esc(s.desc)+'</div></div>'
+        +'<button class="shop-buy" '+(can?"":"disabled")+' data-id="'+s.id+'">'+s.cost+' 🌱</button></div>';
+    }).join("");
+    box.querySelectorAll(".shop-buy").forEach(function(b){
+      b.onclick=function(){
+        var s=null; for(var i=0;i<SHOP.length;i++){if(SHOP[i].id===b.dataset.id){s=SHOP[i];break;}}
+        if(!s||(state.growth||0)<s.cost){toast("成长点还不够，去做到一件契约或计划吧 🌱");return;}
+        state.growth-=s.cost; save(); s.buy(); renderShop(); renderStats();
+      };
+    });
+  }
+
+  // ---------- 内心花园（成长池可视化 + 习惯强度衰减） ----------
+  function plantFor(p){
+    var days=daysSince(p.when);
+    if(p.contract) return {e:"🌸",cap:"契约记忆"};
+    if(days>=7) return {e:"🌳",cap:"已扎根"};
+    if(days>=3) return {e:"🌿",cap:"生长中"};
+    if(days>=1) return {e:"🌱",cap:"发芽"};
+    return {e:"🌰",cap:"刚落下"};
+  }
+  function habitStrength(){
+    // 衰减式连击 → 习惯强度 0-100：前 3 天爬升快，之后边际递减
+    var st=streakCount();
+    return Math.round(100*(1-Math.pow(0.86,st)));
+  }
+  function renderGarden(){
+    var box=document.getElementById("gardenBox");if(!box)return;
+    var plants=state.pool.map(function(p){
+      var pl=plantFor(p);
+      return '<div class="garden-plant" title="'+esc(p.title)+'"><div>'+pl.e+'</div><div class="gp-cap">'+esc((p.title||"").slice(0,8))+'</div></div>';
+    });
+    var st=streakCount(), strength=habitStrength();
+    var inner='<div class="garden-h"><span>🌿 内心花园</span>'
+      +'<span class="gh-sub">'+(state.pool.length?state.pool.length+" 株在生长":"还没有念头")+'</span></div>';
+    if(!state.pool.length){
+      inner+='<div class="garden-plot"><div class="garden-empty">花园还空着，存一个念头让它发芽 🌰 做到契约会开成 🌸</div></div>';
+    }else{
+      inner+='<div class="garden-plot">'+plants.join("")+'</div>';
+    }
+    inner+='<div class="garden-strength">'
+      +'<div class="gs-row"><span>习惯强度</span><span class="gs-bar"><span class="gs-fill" style="width:'+strength+'%"></span></span><span>'+strength+'%</span></div>'
+      +'<div class="gs-tip">连续行动 '+st+' 天（衰减式：断一天只减半、不归零，比二元打卡更耐摔）</div>'
+      +'</div>';
+    box.innerHTML=inner;
+  }
+
   // ---------- 场景像素画 ----------
   // 通用网格工具
   function newGrid(GW,GH){var g=[];for(var r=0;r<GH;r++)g.push(new Array(GW).fill("."));return g;}
@@ -1176,6 +1427,7 @@
       if(t.done){var d=today();state.history[d]=state.history[d]||{done:0};state.history[d].done+=(t.lvl||1);}
       save();renderTasks();renderLoad();renderStats();renderPomoBind();
       if(t.done){
+        awardGrowth(1); // 完成计划 +1 成长点
         toast("做好一件，就很棒 🌿");doneMascot();
         burstAt(chk,["🌿","✨","💚"],9);
         var _ts=todayTasks();
@@ -1382,7 +1634,7 @@
       var meta=cooled
         ?'<div class="pi-when cool">已存放 '+days+' 天 · 冲动已冷却</div>'
         :'<div class="pi-when">'+when.toLocaleDateString()+' '+when.toLocaleTimeString().slice(0,5)+' · 已存放 '+days+' 天</div>';
-      main.innerHTML=p.title+meta;
+      main.innerHTML=(p.contract?'<span class="pi-tag contract">🤝 契约</span> ':'')+p.title+meta;
       var act=document.createElement("button");
       act.className="mini-btn"+(cooled?" warm":"");
       act.textContent=cooled?"捡起来":"纳入今日";
@@ -1496,7 +1748,7 @@
     remain--;
     if(remain<=0){
       if(phase==="focus"){
-        state.pomo++;state.stats.totalPomos=(state.stats.totalPomos||0)+1;save();
+        state.pomo++;state.stats.totalPomos=(state.stats.totalPomos||0)+1;save();awardGrowth(1); // 番茄 +1 成长点
         var bid=state.pomoBind;
         if(bid){
           var t=state.tasks.find(function(x){return x.id===bid;});
@@ -1570,6 +1822,11 @@
     var e6=document.getElementById("sArchived");if(e6)e6.textContent=(state.archive||[]).length;
     var e7=document.getElementById("sPoolLeft");if(e7)e7.textContent=(state.pool||[]).length;
     var e8=document.getElementById("sCut");if(e8)e8.textContent=state.cutLog?state.cutLog.length:0;
+    var eC=document.getElementById("sContract");if(eC)eC.textContent=state.stats.contractDone||0;
+    var eG=document.getElementById("sGarden");if(eG)eG.textContent=(state.pool||[]).length;
+    var eSS=document.getElementById("sStudyStreak");if(eSS)eSS.textContent=studyStreak();
+    var eSW=document.getElementById("sStudyWeek");if(eSW)eSW.textContent=studyWeekMin();
+    var eST=document.getElementById("sStudyTop");if(eST)eST.textContent=studyTopSubject()||"—";
     // 本地里程碑（替代社区假数字，纯本地累计）
     var donePts=0;for(var hk in state.history){if(state.history[hk]&&state.history[hk].done)donePts+=state.history[hk].done;}
     var daysN=Math.max(1,daysSince(state.createdAt)+1);
@@ -1682,6 +1939,67 @@
     e.target.value="";
   };
 
+  // ---------- 导入学习记录（学苗，合并式，不覆盖） ----------
+  function studyWeekMin(){
+    var now=new Date();var dow=(now.getDay()+6)%7;
+    var mon=new Date(now);mon.setDate(now.getDate()-dow);mon.setHours(0,0,0,0);
+    return state.study.events.filter(function(e){return e.type==="minutes"&&new Date(e.ts)>=mon;})
+      .reduce(function(a,e){return a+e.amount;},0);
+  }
+  function studyStreak(){
+    var ev=state.study.events;if(!ev.length)return 0;
+    var days={};ev.forEach(function(e){var d=new Date(e.ts);days[d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()]=1;});
+    var keys=Object.keys(days).sort();var last=new Date(keys[keys.length-1]);last.setHours(0,0,0,0);
+    var todayN=new Date();todayN.setHours(0,0,0,0);
+    if(Math.round((todayN-last)/86400000)>1)return 0;
+    var n=0,cur=last;
+    while(days[cur.getFullYear()+"-"+(cur.getMonth()+1)+"-"+cur.getDate()]){n++;cur.setDate(cur.getDate()-1);}
+    return n;
+  }
+  function studyTopSubject(){
+    var m={};state.study.events.forEach(function(e){if(e.type==="minutes")m[e.subject]=(m[e.subject]||0)+e.amount;});
+    var best=null,bv=-1;for(var k in m){if(m[k]>bv){bv=m[k];best=k;}}
+    return best;
+  }
+  function importStudyEvents(arr){
+    if(!Array.isArray(arr))throw new Error("应为 JSON 数组");
+    var added=0,ids={};state.study.events.forEach(function(e){ids[e.id]=1;});
+    arr.forEach(function(e){
+      if(!e||typeof e!=="object"||!e.subject||!e.type||typeof e.amount!=="number")return;
+      var id=e.id||(Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+      if(ids[id])return;
+      state.study.events.push({id:id,ts:e.ts||Date.now(),subject:String(e.subject),
+        type:e.type,amount:Number(e.amount),note:e.note||"",source:e.source||"studyapp"});
+      ids[id]=1;added++;
+      var gp=e.type==="minutes"?Math.max(1,Math.floor(e.amount/10)):Math.max(1,Math.floor(e.amount/5)); // 分钟每10≈1点，次数/产出每5≈1点
+      awardGrowth(gp);
+    });
+    save();renderStats();
+    toast(added?("已合并 "+added+" 条学习记录 ✅"):"没有新增记录（可能已导入过）");
+  }
+  function importStudyFile(file){
+    var reader=new FileReader();
+    reader.onload=function(e){
+      try{importStudyEvents(JSON.parse(e.target.result));}
+      catch(err){toast("⚠️ 文件无法识别，导入已取消");}
+    };
+    reader.readAsText(file);
+  }
+  document.getElementById("importStudyBtn").onclick=function(){document.getElementById("importStudyFile").click();};
+  document.getElementById("importStudyFile").onchange=function(e){
+    var f=e.target.files&&e.target.files[0];if(f)importStudyFile(f);e.target.value="";
+  };
+  document.getElementById("importStudyPaste").onclick=function(){
+    var box=document.getElementById("studyPasteBox");
+    box.style.display=box.style.display==="none"?"block":"none";
+  };
+  document.getElementById("studyPasteGo").onclick=function(){
+    var v=document.getElementById("studyPaste").value.trim();if(!v){toast("先粘贴 JSON");return;}
+    try{importStudyEvents(JSON.parse(v));document.getElementById("studyPaste").value="";
+      document.getElementById("studyPasteBox").style.display="none";}
+    catch(err){toast("⚠️ JSON 解析失败，检查格式");}
+  };
+
   // ---------- tab switch ----------
   function switchTab(name){
     ["today","pool","focus","me"].forEach(function(n){
@@ -1693,8 +2011,9 @@
     var sec=document.getElementById("tab-"+name);
     sec.classList.remove("fade-in");void sec.offsetWidth;sec.classList.add("fade-in");
     if(name==="me")renderStats();
+    if(name==="today"){renderContract();renderForgive();catCoachAsk();}
     if(name==="focus")renderPomoBind();
-    if(name==="pool")renderPool();
+    if(name==="pool"){renderPool();renderGarden();renderShop();}
   }
   document.querySelectorAll("nav.tab .t").forEach(function(t){
     t.onclick=function(){switchTab(t.dataset.tab);};
@@ -1773,7 +2092,7 @@
 
   // ---------- init ----------
   document.getElementById("appDate").textContent=fmtDate();
-  renderStateRow();renderLoad();renderTasks();renderPool();renderPomo();renderPomoBind();renderStats();
+  renderStateRow();renderLoad();renderTasks();renderPool();renderPomo();renderPomoBind();renderStats();renderContract();renderForgive();renderGarden();renderShop();
   // 主动提醒：打开即超载时，每日一次品牌化提醒（呼应"会提醒你别努力了"）
   if(loadPoints()>effCap() && state.lastNudge!==today()){
     state.lastNudge=today();save();
