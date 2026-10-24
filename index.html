@@ -439,7 +439,7 @@
   <div class="card load-card">
     <div class="load-segments" id="loadSegments"></div>
     <div class="load-meta">
-      <span>安排 <b id="arranged">12</b> &nbsp; 实际 <b id="actual">0</b></span>
+      <span>安排 <b id="arranged">12</b> &nbsp; 实际 <b id="actual">0</b><span id="gymNote" style="font-size:10.5px;color:#7c93a8;font-weight:700;margin-left:6px;"></span></span>
       <span class="t-legend">
         <i style="background:#bcd9c4"></i>T1
         <i style="background:#a7cbb6"></i>T2
@@ -554,6 +554,11 @@
       <div class="stat"><div class="num" id="sCut">0</div><div class="lab">主动减负 · 件</div></div>
     </div>
     <div class="stat-grid3" style="margin-top:10px;">
+      <div class="stat"><div class="num" id="sGym7">—</div><div class="lab">训练消耗 · 点</div></div>
+      <div class="stat"><div class="num" id="sGymN">—</div><div class="lab">训练次数 · 7日</div></div>
+      <div class="stat"><div class="num" id="sGymLast">—</div><div class="lab">上次训练</div></div>
+    </div>
+    <div class="stat-grid3" style="margin-top:10px;">
       <div class="stat"><div class="num" id="sContract">0</div><div class="lab">契约达成 · 件</div></div>
       <div class="stat"><div class="num" id="sGarden">0</div><div class="lab">花园株数</div></div>
     </div>
@@ -590,6 +595,17 @@
       <span>清除全部本地数据</span>
       <span class="danger-link" id="resetData">重置</span>
     </div>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot"></span>接入 openGym（可选）</h2>
+    <p class="backup-note">如果你也用 openGym 记训练，把它的导出 JSON 导进来，水豚会把你的训练消耗算进当天承载力——练得狠的日子，自动劝你少安排点。</p>
+    <div class="backup-row">
+      <button class="btn" id="gymImportBtn">导入训练数据</button>
+      <button class="btn ghost" id="gymDemoBtn">试试示例</button>
+    </div>
+    <input type="file" id="gymFile" accept="application/json,.json" style="display:none" />
+    <p class="backup-note" id="gymStatus" style="margin:10px 0 0;"></p>
   </div>
 
   <div class="card">
@@ -855,6 +871,8 @@
   function meCatInsight(){
     var st=streakCount();
     var load=loadPoints(),cap=effCap();
+    var _gpts=gymLoadOn(today());
+    if(_gpts>=3)return "今天带着训练疲劳呢，承载力我调低了，别硬塞 🐴";
     var _cb=(state.calib||[]).filter(function(x){return x.lvl>=3;});
     if(_cb.length>=3&&_cb.filter(function(x){return x.actual==="more";}).length*3>=_cb.length*2)
       return "你常低估中大型任务的分量，估级别时留意一下 🐴";
@@ -1323,9 +1341,10 @@
 
   // ---------- 今日 / 负荷 + 吉祥物 ----------
   function renderLoad(){
-    var cap=effCap(),load=loadPoints(),ratio=cap?load/cap:0;
+    var cap=availCap(),load=loadPoints(),ratio=cap?load/cap:0;
     var remainPt=cap-load;
     isOver=load>cap;
+    var gymPts=gymLoadOn(today());
     var td=today();
     if(!state.history[td])state.history[td]={done:0,load:0};
     if(state.history[td].load!==load){state.history[td].load=load;save();}
@@ -1380,6 +1399,8 @@
     segBox.innerHTML=html;
     document.getElementById("arranged").textContent=cap;
     document.getElementById("actual").textContent=load;
+    var _gn=document.getElementById("gymNote");
+    if(_gn)_gn.textContent=gymPts>=1?("训练 -"+gymPts):"";
     nudge.textContent=msg;
     setMascot(key,ts.filter(function(t){return !t.done;}).map(function(t){return t.lvl||1;}));
     document.getElementById("sRemain").textContent=remainPt>=0?remainPt:("+"+(-remainPt));
@@ -1575,7 +1596,7 @@
   document.getElementById("addBtn").onclick=function(){
     var inp=document.getElementById("taskInput");var v=inp.value.trim();
     if(!v){toast("先写点什么吧");return;}
-    var cap=effCap(),before=loadPoints();
+    var cap=availCap(),before=loadPoints();
     state.tasks.push({id:uid(),title:v,lvl:pickLvl,date:today(),done:false,pomos:0,important:false});
     inp.value="";
     save();renderTasks();renderLoad();renderStats();renderPomoBind();
@@ -1793,7 +1814,7 @@
 
   // ---------- 看板 ----------
   function renderStats(){
-    var cap=effCap(),load=loadPoints(),ratio=cap?load/cap:0;
+    var cap=availCap(),load=loadPoints(),ratio=cap?load/cap:0;
     document.getElementById("sLoad").textContent=Math.round(ratio*100)+"%";
     document.getElementById("sDone").textContent=todayTasks().filter(function(t){return t.done;}).length;
     document.getElementById("sStreak").textContent=streakCount();
@@ -1820,6 +1841,27 @@
     for(var ki=0;ki<7;ki++){var d3=new Date();d3.setDate(dd.getDate()-ki);var kk=dayKey(d3);if(state.history[kk]&&typeof state.history[kk].load==="number"){sumL+=state.history[kk].load;cntL++;}}
     document.getElementById("sAvgLoad").textContent= cntL? Math.round(sumL/cntL) : 0;
     var e6=document.getElementById("sArchived");if(e6)e6.textContent=(state.archive||[]).length;
+    var _gp=0,_gn=0;
+    if(state.gym&&state.gym.days){
+      for(var _gk in state.gym.days){
+        var _gage=(Date.now()-new Date(_gk+"T00:00:00").getTime())/86400000;
+        if(_gage<=7){_gp+=state.gym.days[_gk].pts;_gn+=state.gym.days[_gk].n;}
+      }
+    }
+    var e9=document.getElementById("sGym7");if(e9)e9.textContent=Math.round(_gp);
+    var e10=document.getElementById("sGymN");if(e10)e10.textContent=_gn;
+    var e11=document.getElementById("sGymLast");
+    if(e11){
+      if(!state.gym||!state.gym.days)e11.textContent="—";
+      else{
+        var _glast=99;
+        for(var _gk2 in state.gym.days){
+          var _ga2=Math.floor((Date.now()-new Date(_gk2+"T00:00:00").getTime())/86400000);
+          if(_ga2<_glast)_glast=_ga2;
+        }
+        e11.textContent=_glast===0?"今天":_glast+" 天前";
+      }
+    }
     var e7=document.getElementById("sPoolLeft");if(e7)e7.textContent=(state.pool||[]).length;
     var e8=document.getElementById("sCut");if(e8)e8.textContent=state.cutLog?state.cutLog.length:0;
     var eC=document.getElementById("sContract");if(eC)eC.textContent=state.stats.contractDone||0;
@@ -2028,6 +2070,105 @@
     if(pc&&running)drawCompanion(pc,sceneTick);
   },160);
 
+  // ---------- openGym 训练数据接入 ----------
+  // 折算规则（可解释）：训练点 = 完成组数/6 + 容量卷/1500（lb 按 3300），单次封顶 6 点；
+  // 疲劳按 50% 当天 / 30% 次日 / 20% 后天 摊销。
+  function gymPointsOf(w,unit){
+    var sets=0;
+    (w.entries||[]).forEach(function(e){(e.sets||[]).forEach(function(st){if(st.done!==false&&st.done!==null)sets++;});});
+    var vol=w.vol||0;
+    var div=unit==="lb"?3300:1500;
+    var pts=sets/6+vol/div;
+    return {sets:sets,vol:vol,pts:Math.min(6,Math.max(pts>=0.5?1:0,Math.round(pts*10)/10))};
+  }
+  function parseGymState(obj){
+    var st=obj&&obj.state?obj.state:obj;
+    if(!st||!Array.isArray(st.workouts))return null;
+    var days={};
+    st.workouts.forEach(function(w){
+      if(!w||!w.d)return;
+      var g=gymPointsOf(w,st.unit);
+      if(!g.pts)return;
+      var d=days[w.d]||{sets:0,vol:0,pts:0,n:0};
+      d.sets+=g.sets;d.vol+=g.vol;d.pts=Math.round((d.pts+g.pts)*10)/10;d.n++;
+      days[w.d]=d;
+    });
+    return {days:days,unit:st.unit||"kg",count:st.workouts.length,importedAt:Date.now()};
+  }
+  function applyGymImport(parsed){
+    state.gym=parsed;save();
+    renderGymStatus();renderLoad();renderStats();
+  }
+  function gymLoadOn(dstr){
+    if(!state.gym||!state.gym.days)return 0;
+    // dstr 当天 + 前两天按 50/30/20 反向摊入
+    var d=new Date(dstr+"T00:00:00");
+    var sum=0;
+    [[0,0.5],[1,0.3],[2,0.2]].forEach(function(k){
+      var dd=new Date(d.getTime()-k[0]*86400000);
+      var key=dd.getFullYear()+"-"+String(dd.getMonth()+1).padStart(2,"0")+"-"+String(dd.getDate()).padStart(2,"0");
+      var day=state.gym.days[key];
+      if(day)sum+=day.pts*k[1];
+    });
+    return Math.round(sum*10)/10;
+  }
+  // 可用承载力 = 心情承载力 - 训练疲劳
+  function availCap(){
+    return Math.max(1,effCap()-Math.round(gymLoadOn(today())));
+  }
+  function renderGymStatus(){
+    var el=document.getElementById("gymStatus");if(!el)return;
+    if(!state.gym||!state.gym.days){el.textContent="尚未导入。";return;}
+    var d=state.gym.days,n=0,p=0,last=0;
+    var now=Date.now();
+    for(var k in d){
+      var age=(now-new Date(k+"T00:00:00").getTime())/86400000;
+      if(age<=7){n+=d[k].n;p+=d[k].pts;}
+      var since=Math.floor(age);
+      if(last===0||since<last)last=since;
+    }
+    el.textContent="已接入："+state.gym.count+" 次训练 · 近 7 日 "+Math.round(p)+" 点消耗 · 上次训练 "+(last===0?"就是今天":last+" 天前");
+  }
+  // 文件导入
+  document.getElementById("gymImportBtn").onclick=function(){document.getElementById("gymFile").click();};
+  document.getElementById("gymFile").onchange=function(){
+    var f=this.files[0];this.value="";if(!f)return;
+    var rd=new FileReader();
+    rd.onload=function(){
+      try{
+        var parsed=parseGymState(JSON.parse(rd.result));
+        if(!parsed){toast("没读到训练记录，确认是 openGym 的导出文件");return;}
+        applyGymImport(parsed);
+        var wk=parsed.days,today=today();
+        var tPts=gymLoadOn(today);
+        toast("✅ 读到 "+parsed.count+" 次训练，今日训练消耗 "+tPts+" 点");
+        catSay(tPts>=2?"昨天练得不轻，今天承载力我帮你调低了 🐴":"训练数据记下了 🐴",2600);
+      }catch(e){toast("文件解析失败："+"请确认导出的是 openGym 的 JSON");}
+    };
+    rd.readAsText(f);
+  };
+  // 示例数据：过去 3 天的一次腿日 + 一次推日
+  document.getElementById("gymDemoBtn").onclick=function(){
+    var mk=function(off,sets,vol){
+      var d=new Date(Date.now()-off*86400000);
+      var k=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+      return {id:"demo"+off,d:k,name:"示例训练",vol:vol,entries:[{id:"x",sets:Array.apply(null,Array(sets)).map(function(){return {w:60,r:8,done:true};})}]};
+    };
+    applyGymImport({unit:"kg",count:2,days:(function(){
+      var a=mk(1,18,4300),b=mk(3,12,2200),days={};
+      [a,b].forEach(function(w){days[w.d]={sets:w.vol&&18,vol:0,pts:0,n:1};});
+      // 直接用 gymPointsOf 重算，保证规则一致
+      days={};
+      [a,b].forEach(function(w){var g=gymPointsOf(w,"kg");days[w.d]={sets:g.sets,vol:g.vol,pts:g.pts,n:1};});
+      return days;
+    })(),importedAt:Date.now()});
+    toast("已载入示例：昨天腿日 + 前天推日");
+    catSay("示例数据：昨天练腿 18 组，今天承载力给你降了点 🐴",2800);
+    renderGymStatus();
+  };
+  // 测试钩子
+  window.__applyGymImport=applyGymImport;window.__gymLoadOn=gymLoadOn;
+
   // ---------- 每日收尾仪式 ----------
   function buildWrapup(){
     var td=today();
@@ -2042,12 +2183,18 @@
     rows.push("完成 <b>"+doneN+"</b> 件 · 剩 "+undone.length+" 件没做完");
     if(cutsToday)rows.push("主动减负 <b>"+cutsToday+"</b> 件 ✂️");
     var _todayAct=(state.calib||[]).filter(function(x){return new Date(x.when).toDateString()===new Date().toDateString();});
+    var _gwrap=gymLoadOn(td);
+    if(state.gym&&state.gym.days)_rows_gym(wrapInfo);
     if(_todayAct.length){
       var _moreToday=_todayAct.filter(function(x){return x.actual==="more";}).length;
       rows.push("实际精力 <b>"+(_moreToday===0?"都和预估差不多":"有 "+_moreToday+" 件比预估费劲")+"</b>");
     }
     var stashN=(state.stash||[]).length;
     if(stashN)rows.push("水豚替你叼着 <b>"+stashN+"</b> 件，别惦记");
+    if(state.gym&&state.gym.days){
+      var _gd=gymLoadOn(td);
+      if(_gd>=1)rows.push("训练疲劳还剩 <b>"+_gd+"</b> 点，明天会轻一些");
+    }
     // 未完成的话：顺延一句
     if(undone.length){
       rows.push("没做完的，量力会帮你顺延到明天 ✨");
